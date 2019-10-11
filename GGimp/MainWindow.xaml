@@ -3,10 +3,88 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:local="clr-namespace:GGimp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="GGimp" Height="450" Width="800">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Menu Grid.Column="0" Grid.Row="0">
+            <Label Content="Linia"/>
+            <RadioButton IsChecked="True" GroupName="Tools">
+                <WrapPanel>
+                    <fa:ImageAwesome Icon="Exchange" Width="20"/>
+                    <TextBlock Text=" Linia"/>
+                </WrapPanel>
+                <RadioButton.Style>
+                    <Style TargetType="RadioButton">
+                        <Style.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Opacity" Value="0.5"></Setter>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </RadioButton.Style>
+            </RadioButton>
+            <RadioButton GroupName="Tools">
+                <WrapPanel>
+                    <fa:ImageAwesome Icon="Square" Width="20"/>
+                    <TextBlock Text=" Kwadrat"/>
+                </WrapPanel>
+                <RadioButton.Style>
+                    <Style TargetType="RadioButton">
+                        <Style.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Opacity" Value="0.5"></Setter>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </RadioButton.Style>
+            </RadioButton>
+            <RadioButton GroupName="Tools">
+                <RadioButton.Content>
+                    <WrapPanel>
+                        <fa:ImageAwesome Icon="Circle" Width="20"/>
+                        <TextBlock Text=" Koło"/>
+                    </WrapPanel>
+                </RadioButton.Content>
+                <RadioButton.Style>
+                    <Style TargetType="RadioButton">
+                        <Style.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Opacity" Value="0.5"></Setter>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </RadioButton.Style>
+            </RadioButton>
+            <RadioButton GroupName="Tools">
+                <WrapPanel>
+                    <fa:ImageAwesome Icon="PaintBrush" Width="20"/>
+                    <TextBlock Text=" Edycja"/>
+                </WrapPanel>
+                <RadioButton.Style>
+                    <Style TargetType="RadioButton">
+                        <Style.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Opacity" Value="0.5"></Setter>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </RadioButton.Style>
+            </RadioButton>
+            <Button Content="Tekstowo" Width="90"/>
+        </Menu>
+        <ScrollViewer Grid.Column="2" Grid.Row="0" HorizontalScrollBarVisibility="Visible">
+            <Canvas x:Name="Canvas" Width="800" Height="600" Background="White"
+                    ></Canvas>
+        </ScrollViewer>
     </Grid>
 </Window>
