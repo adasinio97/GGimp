@@ -1,61 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace GGimp
 {
-    public class ShapeDimensions
-    {
-        public int X1 { get; set; }
-        public int Y1 { get; set; }
-
-        public ShapeDimensions(Shape shape)
-        {
-            X1 = (int)Canvas.GetLeft(shape);
-            Y1 = (int)Canvas.GetTop(shape);
-        }
-        public ShapeDimensions() { }
-    }
-
-    public class LineDimensions : ShapeDimensions
-    {
-        public int X2 { get; set; }
-        public int Y2 { get; set; }
-
-        public LineDimensions(Line line) : base()
-        {
-
-            X1 = (int)line.X1;
-            Y1 = (int)line.Y1;
-            X2 = (int)line.X2;
-            Y2 = (int)line.Y2;
-        }
-    }
-
     public partial class MainWindow : Window
     {
-
-        private enum Shapes { Rectangle, Circle, Line };
-        private enum EditModes { Resize, Draw, Drag };
-
         private EditModes SelectedEditMode = EditModes.Drag;
         private Shapes SelectedShape = Shapes.Line;
 
-        private Point? FirstClicked;
-        private Shape FirstSelectedShape = null;
-        private LineDimensions FirstLineDimensions = null;
-        private ShapeDimensions FirstShapeDimensions = null;
+        private Point? ClickPoint;
+        private Shape ShapeToEdit = null;
+        private LineDimensions SelectedLineDim = null;
+        private ShapeDimensions SelectedShapeDim = null;
 
         private bool IsProcessing = false;
 
@@ -63,7 +23,8 @@ namespace GGimp
         {
             InitializeComponent();
         }
-        void ChangeTool(object sender, RoutedEventArgs e)
+
+        private void ChangeTool(object sender, RoutedEventArgs e)
         {
             if (sender.Equals(line))
             {
@@ -93,6 +54,16 @@ namespace GGimp
                 selectedToolLabel.Content = "Suwanie";
                 SelectedEditMode = EditModes.Drag;
             }
+        }
+
+        public void DrawNewShape(string x, string y, string width, string height)
+        {
+            int parsedX, parsedY, parsedWidth, parsedHeight;
+            int.TryParse(x, out parsedX);
+            int.TryParse(y, out parsedY);
+            int.TryParse(width, out parsedWidth);
+            int.TryParse(height, out parsedHeight);
+            DrawNewShape(parsedX, parsedY, parsedWidth, parsedHeight);
         }
 
         private void DrawNewShape(int x, int y, int width = 0, int height = 0)
@@ -143,19 +114,19 @@ namespace GGimp
                 if (!IsProcessing)
                 {
                     toSave.Fill = Brushes.Gray;
-                    FirstSelectedShape = toSave;
+                    ShapeToEdit = toSave;
                 }
             };
-            FirstSelectedShape = toSave;
+            ShapeToEdit = toSave;
             canvas.Children.Add(toSave);
         }
 
         private void MouseRelease(object sender, MouseButtonEventArgs e)
         {
-            FirstClicked = null;
-            FirstSelectedShape = null;
+            ClickPoint = null;
+            ShapeToEdit = null;
             IsProcessing = false;
-            FirstLineDimensions = null;
+            SelectedLineDim = null;
         }
 
         private void MouseClick(object sender, MouseButtonEventArgs e)
@@ -163,68 +134,80 @@ namespace GGimp
             IsProcessing = true;
             if (SelectedEditMode == EditModes.Draw)
             {
-                FirstClicked = e.GetPosition(canvas);
-                DrawNewShape((int)FirstClicked.Value.X, (int)FirstClicked.Value.Y);
+                ClickPoint = e.GetPosition(canvas);
+                DrawNewShape((int)ClickPoint.Value.X, (int)ClickPoint.Value.Y);
             }
-            else if (SelectedEditMode == EditModes.Resize && FirstSelectedShape != null)
+            else if (SelectedEditMode == EditModes.Resize && ShapeToEdit != null)
             {
-                FirstClicked = new Point((int)Canvas.GetLeft(FirstSelectedShape), (int)Canvas.GetTop(FirstSelectedShape));
+                ClickPoint = new Point((int)Canvas.GetLeft(ShapeToEdit), (int)Canvas.GetTop(ShapeToEdit));
             }
-            else if (SelectedEditMode == EditModes.Drag && FirstSelectedShape != null)
+            else if (SelectedEditMode == EditModes.Drag && ShapeToEdit != null)
             {
-                FirstClicked = e.GetPosition(canvas);
-                if (FirstSelectedShape.GetType() == typeof(Line))
+                ClickPoint = e.GetPosition(canvas);
+                if (ShapeToEdit.GetType() == typeof(Line))
                 {
-                    FirstLineDimensions = new LineDimensions((Line)FirstSelectedShape);
+                    SelectedLineDim = new LineDimensions((Line)ShapeToEdit);
                     return;
                 }
-                FirstShapeDimensions = new ShapeDimensions(FirstSelectedShape);
+                SelectedShapeDim = new ShapeDimensions(ShapeToEdit);
 
             }
         }
 
         private void MouseMoving(object sender, MouseEventArgs e)
         {
-            if (FirstClicked != null && (SelectedEditMode == EditModes.Draw || SelectedEditMode == EditModes.Resize))
+            if (ClickPoint != null && (SelectedEditMode == EditModes.Draw || SelectedEditMode == EditModes.Resize))
             {
                 Point currentPosition = e.GetPosition(canvas);
-                if (FirstSelectedShape.GetType() == typeof(Line))
+                if (ShapeToEdit.GetType() == typeof(Line))
                 {
-                    Line toEdit = (Line)FirstSelectedShape;
+                    Line toEdit = (Line)ShapeToEdit;
                     toEdit.X2 = currentPosition.X;
                     toEdit.Y2 = currentPosition.Y;
                     return;
                 }
-                if (currentPosition.X < FirstClicked.Value.X)
-                { FirstSelectedShape.SetValue(LeftProperty, (double)currentPosition.X); }
-                if (currentPosition.Y < FirstClicked.Value.Y)
-                { FirstSelectedShape.SetValue(TopProperty, (double)currentPosition.Y); }
+                if (currentPosition.X < ClickPoint.Value.X)
+                { ShapeToEdit.SetValue(LeftProperty, (double)currentPosition.X); }
+                if (currentPosition.Y < ClickPoint.Value.Y)
+                { ShapeToEdit.SetValue(TopProperty, (double)currentPosition.Y); }
 
-                FirstSelectedShape.Height = Math.Abs((int)FirstClicked.Value.Y - (int)currentPosition.Y);
-                FirstSelectedShape.Width = Math.Abs((int)FirstClicked.Value.X - (int)currentPosition.X);
+                ShapeToEdit.Height = Math.Abs((int)ClickPoint.Value.Y - (int)currentPosition.Y);
+                ShapeToEdit.Width = Math.Abs((int)ClickPoint.Value.X - (int)currentPosition.X);
             }
-            else if (FirstClicked != null && (SelectedEditMode == EditModes.Drag))
+            else if (ClickPoint != null && (SelectedEditMode == EditModes.Drag))
             {
                 Point currentPosition = e.GetPosition(canvas);
 
-                if (FirstSelectedShape.GetType() == typeof(Line))
+                if (ShapeToEdit.GetType() == typeof(Line))
                 {
-                    Line toEdit = (Line)FirstSelectedShape;
-                    toEdit.X1 = Math.Abs(FirstLineDimensions.X1 - FirstClicked.Value.X + currentPosition.X);
-                    toEdit.Y1 = Math.Abs(FirstLineDimensions.Y1 - FirstClicked.Value.Y + currentPosition.Y);
-                    toEdit.X2 = Math.Abs(FirstLineDimensions.X2 - FirstClicked.Value.X + currentPosition.X);
-                    toEdit.Y2 = Math.Abs(FirstLineDimensions.Y2 - FirstClicked.Value.Y + currentPosition.Y);
+                    Line toEdit = (Line)ShapeToEdit;
+                    toEdit.X1 = Math.Abs(SelectedLineDim.X1 - ClickPoint.Value.X + currentPosition.X);
+                    toEdit.Y1 = Math.Abs(SelectedLineDim.Y1 - ClickPoint.Value.Y + currentPosition.Y);
+                    toEdit.X2 = Math.Abs(SelectedLineDim.X2 - ClickPoint.Value.X + currentPosition.X);
+                    toEdit.Y2 = Math.Abs(SelectedLineDim.Y2 - ClickPoint.Value.Y + currentPosition.Y);
                     return;
                 }
-                FirstSelectedShape.SetValue(LeftProperty, Math.Abs(FirstShapeDimensions.X1 - FirstClicked.Value.X + currentPosition.X));
-                FirstSelectedShape.SetValue(TopProperty, Math.Abs(FirstShapeDimensions.Y1 - FirstClicked.Value.Y + currentPosition.Y));
+                ShapeToEdit.SetValue(LeftProperty, Math.Abs(SelectedShapeDim.X1 - ClickPoint.Value.X + currentPosition.X));
+                ShapeToEdit.SetValue(TopProperty, Math.Abs(SelectedShapeDim.Y1 - ClickPoint.Value.Y + currentPosition.Y));
 
             }
         }
 
         private void TextEditShape(object sender, MouseButtonEventArgs e)
         {
+            TextEditDialog dialog = new TextEditDialog(ShapeToEdit);
+            dialog.Show();
+        }
 
+        private void TextAddShape(object sender, RoutedEventArgs e)
+        {
+            if (SelectedEditMode != EditModes.Draw)
+            {
+                MessageBox.Show("Musisz wybrać kształt który chcesz dodać!", "Błąd");
+                return;
+            }
+            TextEditDialog dialog = new TextEditDialog(this);
+            dialog.Show();
         }
     }
 }
